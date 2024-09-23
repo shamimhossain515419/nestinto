@@ -13,7 +13,7 @@ import { CreateUserDto } from './dtos/create-user.dto';
 import { GetUsersParamDto } from './dtos/get-users-param.dto';
 import { PatchUserDto } from './dtos/patch-user.dto';
 import { UsersService } from './providers/users.service';
-import { ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiTags, ApiQuery, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('users')
 @ApiTags('Users')
@@ -23,43 +23,27 @@ export class UsersController {
     private readonly usersService: UsersService,
   ) {}
 
-  @Get('/:id?')
-  @ApiOperation({
-    summary: 'Fetches a list of registered users on the application.'
-  })
-  @ApiQuery({
-    name: 'limit',
-    type: String,
-    description: 'The upper limit of pages you want the pagination to return',
-    required: false,
-  })
-  @ApiQuery({
-    name: 'page',
-    type: String,
-    description:
-      'The position of the page number that you want the API to return',
-    required: false,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Users fetched successfully based on the query',
-  })
-  public getUsers(
-    @Param() getUserParamDto: GetUsersParamDto,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-  ) {
-    return this.usersService.findAll(getUserParamDto, limit, page);
-  }
-
   @Post()
-  public createUsers(@Body() createUserDto: CreateUserDto) {
-    console.log(createUserDto instanceof CreateUserDto);
-    return 'You sent a post request to users endpoint';
+  public createUser(@Body() createUserDto: CreateUserDto) {
+    return this.usersService.createUser(createUserDto);
   }
 
   @Patch()
   public patchUser(@Body() patchUserDto: PatchUserDto) {
     return patchUserDto;
+  }
+  @Get()
+  public async getSinge(@Query('id') id: number) {
+    return this.usersService.findOneById(id);
+  }
+
+  @Get('get-all')
+  public async getAllUsers() {
+    return this.usersService.findAll();
+  }
+
+  @Post('create-many')
+  public createManyUsers(@Body() createUsersDto: CreateUserDto[]) {
+    return this.usersService.createMany(createUsersDto);
   }
 }

@@ -1,8 +1,17 @@
-import { Body, Controller, Get, Param, Patch, Post } from '@nestjs/common';
-import { PostsService } from './providers/posts.service';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  ParseIntPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { PatchPostDto } from './dtos/patch-post.dto';
+import { PostsService } from './providers/posts.service';
 
 @Controller('posts')
 @ApiTags('Posts')
@@ -13,13 +22,25 @@ export class PostsController {
      */
     private readonly postsService: PostsService,
   ) {}
-
   /*
    * GET localhost:3000/posts/:userId
    */
-  @Get('/:userId?')
-  public getPosts(@Param('userId') userId: string) {
-    return this.postsService.findAll(userId);
+  @Get()
+  public async getPosts() {
+    try {
+      const allPosts = await this.postsService.findAll();
+      return {
+        success: true,
+        data: allPosts,
+        message: 'Posts retrieved successfully.',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          'Unable to retrieve posts at the moment. Please try again later.',
+      };
+    }
   }
 
   @ApiOperation({
@@ -32,7 +53,7 @@ export class PostsController {
   })
   @Post()
   public createPost(@Body() createPostDto: CreatePostDto) {
-    console.log(createPostDto);
+    return this.postsService.create(createPostDto);
   }
 
   @ApiOperation({
@@ -44,7 +65,12 @@ export class PostsController {
       'You get a success 20o response if the post is updated successfully',
   })
   @Patch()
-  public updatePost(@Body() patchPostsDto: PatchPostDto) {
-    console.log(patchPostsDto);
+  public async updatePost(@Body() patchPostsDto: PatchPostDto) {
+    return await this.postsService.update(patchPostsDto);
+  }
+
+  @Delete()
+  public deletePost(@Query('id', ParseIntPipe) id: number) {
+    return this.postsService.delete(id);
   }
 }
