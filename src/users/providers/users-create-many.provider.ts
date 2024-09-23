@@ -1,29 +1,31 @@
-  import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { CreateUserDto } from '../dtos/create-user.dto';
 import { User } from '../user.entity';
+import { CreateManyUsersDto } from '../dtos/create-many-users.dto';
 
 @Injectable()
 export class UsersCreateManyProvider {
- constructor(
+  constructor(
     // Injecting UsersCreateManyService
-    private dataSource: DataSource
- ){}
+    private dataSource: DataSource,
+  ) {}
 
- public async createMany(createUsersDto: CreateUserDto[]): Promise<User[]> {
+  public async createMany(
+    CreateManyUsersDto: CreateManyUsersDto,
+  ): Promise<User[]> {
     let newUsers: User[] = [];
 
     // Create Query Runner Instance
     const queryRunner = this.dataSource.createQueryRunner();
 
-    // Connect the query runner to the datasource
+    // Connect the query runner to the data source
     await queryRunner.connect();
 
     // Start the transaction
     await queryRunner.startTransaction();
 
     try {
-      for (let user of createUsersDto) {
+      for (let user of CreateManyUsersDto.users) {
         // Validate user data here (optional)
         let newUser = queryRunner.manager.create(User, user);
         let result = await queryRunner.manager.save(newUser);

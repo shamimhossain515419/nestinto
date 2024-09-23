@@ -15,6 +15,7 @@ import { AuthService } from 'src/auth/providers/auth.service';
 import { ConfigService, ConfigType } from '@nestjs/config';
 import profileConfig from '../config/profile.config';
 import { UsersCreateManyProvider } from './users-create-many.provider';
+import { CreateManyUsersDto } from '../dtos/create-many-users.dto';
 
 /**
  * Controller class for '/users' API endpoint
@@ -123,7 +124,7 @@ export class UsersService {
     });
   }
 
-  public async createMany(createUsersDto: CreateUserDto[]): Promise<User[]> {
-    return await this.usersCreateManyProvider.createMany(createUsersDto);
+  public async createMany(CreateManyUsersDto: CreateManyUsersDto): Promise<User[]> {
+    return await this.usersCreateManyProvider.createMany(CreateManyUsersDto);
   }
 }
