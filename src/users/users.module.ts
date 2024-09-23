@@ -6,11 +6,12 @@ import { User } from './user.entity';
 import { AuthModule } from 'src/auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { UsersCreateManyProvider } from './providers/users-create-many.provider';
+import { CreateUserProvider } from './providers/create-user.provider';
 import profileConfig from './config/profile.config';
 
 @Module({
   controllers: [UsersController],
-  providers: [UsersService, UsersCreateManyProvider],
+  providers: [UsersService, UsersCreateManyProvider, CreateUserProvider],
   exports: [UsersService],
   imports: [
     TypeOrmModule.forFeature([User]),

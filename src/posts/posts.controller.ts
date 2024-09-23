@@ -12,6 +12,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreatePostDto } from './dtos/create-post.dto';
 import { PatchPostDto } from './dtos/patch-post.dto';
 import { PostsService } from './providers/posts.service';
+import { GetPostsDto } from './dtos/get-post.dto';
 
 @Controller('posts')
 @ApiTags('Posts')
@@ -26,9 +27,9 @@ export class PostsController {
    * GET localhost:3000/posts/:userId
    */
   @Get()
-  public async getPosts() {
+  public async getPosts(@Query() postQuery: GetPostsDto) {
     try {
-      const allPosts = await this.postsService.findAll();
+      const allPosts = await this.postsService.findAll(postQuery);
       return {
         success: true,
         data: allPosts,
