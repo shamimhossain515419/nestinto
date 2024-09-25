@@ -1,11 +1,15 @@
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { Module } from '@nestjs/common';
-import { UsersModule } from './users/users.module';
-import { PostsModule } from './posts/posts.module';
 import { AuthModule } from './auth/auth.module';
+import { MetaOptionsModule } from './meta-options/meta-options.module';
+import { Module } from '@nestjs/common';
+import { PostsModule } from './posts/posts.module';
+import { TagsModule } from './tags/tags.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { User } from './users/user.entity';
+/**
+ * Importing Entities
+ * */
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -17,15 +21,18 @@ import { User } from './users/user.entity';
       inject: [],
       useFactory: () => ({
         type: 'postgres',
-        host: 'localhost',
+        // entities: [User],
+        synchronize: true,
         port: 5432,
         username: 'postgres',
         password: 'Shamim515419@',
+        host: 'localhost',
+        autoLoadEntities: true,
         database: 'nestjs-blog',
-        entities: [User],
-        synchronize: true,
       }),
     }),
+    TagsModule,
+    MetaOptionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

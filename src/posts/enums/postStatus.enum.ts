@@ -1,3 +1,4 @@
+//draft, scheduled, review, published
 export enum postStatus {
   DRAFT = 'draft',
   SCHEDULED = 'scheduled',
