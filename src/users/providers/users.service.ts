@@ -1,16 +1,23 @@
+import { CreateUserDto } from './../dtos/create-user.dto';
+import { DataSource, Repository } from 'typeorm';
 import { GetUsersParamDto } from '../dtos/get-users-param.dto';
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Inject,
   Injectable,
-  InternalServerErrorException,
+  RequestTimeoutException,
   forwardRef,
 } from '@nestjs/common';
 import { User } from '../user.entity';
-import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateUserDto } from '../dtos/create-user.dto';
-import { AuthService } from 'src/auth/providers/auth.service';
+import { ConfigService, ConfigType } from '@nestjs/config';
+import profileConfig from '../config/profile.config';
+import { UsersCreateManyProvider } from './users-create-many.provider';
+import { CreateManyUsersDto } from '../dtos/create-many-users.dto';
+import { CreateUserProvider } from './create-user.provider';
+import { FindOneUserByEmailProvider } from './find-one-user-by-email.provider';
 
 /**
  * Controller class for '/users' API endpoint
@@ -19,33 +26,34 @@ import { AuthService } from 'src/auth/providers/auth.service';
 export class UsersService {
   constructor(
     /**
-     * Injecting User repository into UsersService
-     * */
+     * Injecting usersRepository
+     */
     @InjectRepository(User)
     private usersRepository: Repository<User>,
 
-    // Injecting Auth Service
-    @Inject(forwardRef(() => AuthService))
-    private readonly authService: AuthService,
-  ) {}
-
-  public async createUser(createUserDto: CreateUserDto) {
-    // Check if user with email exists
-    const existingUser = await this.usersRepository.findOne({
-      where: { email: createUserDto.email },
-    });
+    @Inject(profileConfig.KEY)
+    private readonly profileConfiguration: ConfigType<typeof profileConfig>,
 
     /**
-     * Handle exceptions if user exists later
-     * */
+     * Inject UsersCreateMany provider
+     */
+    private readonly usersCreateManyProvider: UsersCreateManyProvider,
+    /**
+     * Inject Create Users Provider
+     */
+    private readonly createUserProvider: CreateUserProvider,
 
-    // Try to create a new user
-    // - Handle Exceptions Later
-    let newUser = this.usersRepository.create(createUserDto);
-    newUser = await this.usersRepository.save(newUser);
+    /**
+     * Inject findOneUserByEmailProvider
+     */
+    private readonly findOneUserByEmailProvider: FindOneUserByEmailProvider,
+  ) {}
 
-    // Create the user
-    return newUser;
+  /**
+   * Method to create a new user
+   */
+  public async createUser(createUserDto: CreateUserDto) {
+    return await this.createUserProvider.createUser(createUserDto);
   }
 
   /**
@@ -56,26 +64,56 @@ export class UsersService {
     limt: number,
     page: number,
   ) {
-    return [
+    throw new HttpException(
       {
-        firstName: 'John',
-        email: 'john@doe.com',
+        status: HttpStatus.MOVED_PERMANENTLY,
+        error: 'The API endpoint does not exist',
+        fileName: 'users.service.ts',
+        lineNumber: 88,
       },
+      HttpStatus.MOVED_PERMANENTLY,
       {
-        firstName: 'Alice',
-        email: 'alice@doe.com',
+        cause: new Error(),
+        description: 'Occured because the API endpoint was permanently moved',
       },
-    ];
+    );
   }
 
   /**
    * Public method used to find one user using the ID of the user
    */
-  public findOneById(id: string) {
-    return {
-      id: 1234,
-      firstName: 'Alice',
-      email: 'alice@doe.com',
-    };
+  public async findOneById(id: number) {
+    let user = undefined;
+
+    try {
+      user = await this.usersRepository.findOneBy({
+        id,
+      });
+    } catch (error) {
+      throw new RequestTimeoutException(
+        'Unable to process your request at the moment please try later',
+        {
+          description: 'Error connecting to the the datbase',
+        },
+      );
+    }
+
+    /**
+     * Handle the user does not exist
+     */
+    if (!user) {
+      throw new BadRequestException('The user id does not exist');
+    }
+
+    return user;
+  }
+
+  public async createMany(createManyUsersDto: CreateManyUsersDto) {
+    return await this.usersCreateManyProvider.createMany(createManyUsersDto);
+  }
+
+  // Finds one user by email
+  public async findOneByEmail(email: string) {
+    return await this.findOneUserByEmailProvider.findOneByEmail(email);
   }
 }
